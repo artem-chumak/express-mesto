@@ -1,6 +1,6 @@
-const mongoose = require('mongoose'); // подключили mongoose для работы с Mongod
+const { Schema, model } = require('mongoose'); // подключили mongoose для работы с Mongod
 
-const userSchema = new mongoose.Schema({ // создаём схему для юзера
+const userSchema = new Schema({ // создаём схему для юзера
   name: {
     type: String,
     required: true,
@@ -19,7 +19,7 @@ const userSchema = new mongoose.Schema({ // создаём схему для ю�
   },
 });
 
-module.exports = mongoose.model('user', userSchema); // создаём модель и экспортируем её
+module.exports = model('User', userSchema); // создаём модель и экспортируем её
 
 // Аккуратно — тут можно запутаться.
 // Первый аргумент — имя модели — должно быть существительным

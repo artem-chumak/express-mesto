@@ -1,6 +1,5 @@
 const { Types, Schema, model } = require('mongoose'); // подключили mongoose для работы с Mongod
 
-
 const cardSchema = new Schema({ // создаём схему для карточки
   name: {
     type: String,
