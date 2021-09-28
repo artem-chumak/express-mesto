@@ -1,6 +1,6 @@
-const { Schema, model } = require('mongoose'); // подключили mongoose для работы с Mongod
+const { Schema, model } = require('mongoose');
 
-const userSchema = new Schema({ // создаём схему для юзера
+const userSchema = new Schema({
   name: {
     type: String,
     required: true,
@@ -19,9 +19,4 @@ const userSchema = new Schema({ // создаём схему для юзера
   },
 });
 
-module.exports = model('User', userSchema); // создаём модель и экспортируем её
-
-// Аккуратно — тут можно запутаться.
-// Первый аргумент — имя модели — должно быть существительным
-// в единственном числе. Но Compass отображает его во множественном.
-// Дело в том, что Mongoose автоматически добавляет букву "s" в конце имени коллекции
+module.exports = model('User', userSchema);

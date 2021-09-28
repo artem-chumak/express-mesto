@@ -1,19 +1,24 @@
-const express = require('express'); // подключили экспрес
-const mongoose = require('mongoose'); // подключили mongoose для работы с Mongod
+// 1. Обернул всё в функцию start (посмотрел у Владилена Минина),
+//    т.к. из-за параметров Mongoose не запускалось. Так смог отловить ошибку.
+// 2. Коды ошибок не завернул в константы, т.к. не понимаю, как это делат, чтобы это имело смысл.
+// 3. Поиск по ID ищет только по длине ID. И там начинается проблемы с выдачей ошибок.
+//    может вернуться null. Может есть другие способы отработать ошибки красиво
+
+const express = require('express');
+const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const usersRouter = require('./routes/users');
 const cardsRouter = require('./routes/cards');
 
-const { PORT = 3000 } = process.env; // указали порт с дефолтным значением 3000
-const app = express(); // включили экспресс
+const { PORT = 3000 } = process.env;
+const app = express();
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-//! сделала, т.к. это было описано в задании, что это даёт до конца не понял пока
 app.use((req, res, next) => {
   req.user = {
-    _id: '6151f4d83fe9cccbb7ea5d6b',
+    _id: '6152e197f45e400409b30568',
   };
 
   next();
