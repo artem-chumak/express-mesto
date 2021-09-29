@@ -10,7 +10,11 @@ const getCurrentUser = (req, res) => User.findById(req.params.id)
       return res.status(404).send({ message: 'Пользователь по указанному id не найден' });
     } return res.status(200).send({ data: user });
   })
-  .catch(() => res.status(500).send({ message: 'На сервере произошла ошибка' }));
+  .catch((e) => {
+    if (e.name === 'CastError') {
+      return res.status(400).send({ mussage: 'Переданы некорректные данные' });
+    } return res.status(500).send({ message: 'На сервере произошла ошибка' });
+  });
 
 const creatUser = (req, res) => User.create({ ...req.body })
   .then((user) => res.status(201).send({ data: user }))

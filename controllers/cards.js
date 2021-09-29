@@ -24,7 +24,11 @@ const deleteCard = (req, res) => Card.findByIdAndRemove(req.params.id)
       return res.status(404).send({ message: 'Карточка с указанным id не найдена' });
     } return res.status(200).send({ data: card });
   })
-  .catch(() => res.status(500).send({ message: 'На сервере произошла ошибка' }));
+  .catch((e) => {
+    if (e.name === 'CastError') {
+      return res.status(400).send({ message: 'Переданы некорректные данные' });
+    } return res.status(500).send({ message: 'На сервере произошла ошибка' });
+  });
 
 const setLike = (req, res) => Card.findByIdAndUpdate(req.params.id,
   { $addToSet: { likes: req.user._id } },
