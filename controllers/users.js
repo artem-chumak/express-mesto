@@ -146,7 +146,7 @@ const login = async (req, res) => {
   } catch (error) {
     if (error.name === 'ValidationError') {
       return res.status(400).send({ message: 'Переданы некорректные данные' });
-    } return res.status(500).json({ message: 'Что-то пошло не так, попробуйте снова' });
+    } return res.status(500).json({ message: 'На сервере произошла ошибка' });
   }
 };
 
