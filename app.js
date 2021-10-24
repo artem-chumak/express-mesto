@@ -5,6 +5,7 @@ const { errors, celebrate, Joi } = require('celebrate');
 const cookieParser = require('cookie-parser');
 const usersRouter = require('./routes/users');
 const cardsRouter = require('./routes/cards');
+const auth = require('./middlewares/auth');
 const { creatUser, login } = require('./controllers/users');
 
 const { PORT = 3000 } = process.env;
@@ -13,14 +14,6 @@ const app = express();
 app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-
-app.use((req, res, next) => {
-  req.user = {
-    _id: '61520612cfabc9d59eb1b0cf',
-  };
-
-  next();
-});
 
 app.post('/signin',
   celebrate({
@@ -39,13 +32,12 @@ app.post('/signup',
       name: Joi.string().min(2).max(30),
       about: Joi.string().min(2).max(30),
       avatar: Joi.string().pattern(/((http|https):\/\/)?(www\.)?[\w\-~]+(\.[\w\-~]+)+(\/[\w\-~]*)*(#[\w-]*)?(\?.*)?/),
-      // regex
     }),
   }),
   creatUser);
 
-app.use('/', usersRouter);
-app.use('/', cardsRouter);
+app.use('/', auth, usersRouter);
+app.use('/', auth, cardsRouter);
 
 async function start() {
   try {
