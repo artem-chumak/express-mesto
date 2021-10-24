@@ -2,73 +2,71 @@ const { NODE_ENV, JWT_SECRET } = process.env;
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const User = require('../models/user');
+const BadRequestError = require('../errors/BadRequestError'); // 400
+const NotFoundError = require('../errors/NotFoundError'); // 404
+const AlreadyExistsError = require('../errors/AlreadyExistsError'); // 409
 
-const getUsers = async (req, res) => {
+const getUsers = async (req, res, next) => {
   try {
     const users = await User.find({});
     res.status(200).json({ users });
-  } catch (error) {
-    res.status(500).json({ message: 'На сервере произошла ошибка' });
-  }
+  } catch (error) { next(error); }
 };
 
-const getCurrentUser = async (req, res) => {
+const getCurrentUser = async (req, res, next) => {
   try {
     const user = await User.findById(req.user._id);
     if (!user) {
-      return res.status(404).send({ message: 'Пользователь по указанному id не найден' });
+      throw new NotFoundError('Пользователь по указанному id не найден');
     } return res.status(200).send({ data: user });
   } catch (error) {
     if (error.name === 'CastError') {
-      return res.status(400).json({ mussage: 'Переданы некорректные данные' });
-    } return res.status(500).json({ message: 'На сервере произошла ошибка' });
+      throw new BadRequestError('Переданы некорректные данные'); // кажется, что можно удалить
+    } return next(error);
   }
 };
 
-const getUserById = async (req, res) => {
+const getUserById = async (req, res, next) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) {
-      return res.status(404).json({ message: 'Пользователь с таким id не найден' });
+      throw new NotFoundError('Пользователь по указанному id не найден');
     } return res.status(200).json(user);
   } catch (error) {
     if (error.name === 'CastError') {
-      return res.status(400).jsor({ message: 'Некорректные данные' });
-    } return res.status(500).json({ message: 'На сервере произошла ошибка' });
+      throw new BadRequestError('Переданы некорректные данные'); // кажется, что можно удалить
+    } return next(error);
   }
 };
 
-const creatUser = async (req, res) => {
+const creatUser = async (req, res, next) => {
   try {
     const { email, password } = req.body;
     const prospect = await User.findOne({ email });
     if (prospect) {
-      return res.status(400).json({ message: 'Такой пользователь уже есть' });
+      throw new AlreadyExistsError('Такой пользователь уже существует');
     }
-
     const hashedPassword = await bcrypt.hash(password, 10);
-
     const user = new User({ ...req.body, password: hashedPassword });
     await user.save();
-
-    return res.status(201).json({ user }); // тут пароль можно не передавать
+    return res.status(201).json({ user }); // тут пароль отправляется, это норм?
   } catch (error) {
     if (error.name === 'ValidationError') {
-      return res.status(400).send({ message: 'Переданы некорректные данные при создании пользователя' });
-    } return res.status(500).send({ message: 'На сервере произошла ошибка' });
+      throw new BadRequestError('Переданы некорректные данные'); // кажется, что это можно удалить
+    } return next(error);
   }
 };
 
-const login = async (req, res) => {
+const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email }).select('+password');
     if (!user) {
-      return res.status(400).json({ message: 'Такого пользователя нет' });
+      throw new NotFoundError('Такого пользователя нет');
     }
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ message: 'Неверный пароль, попробуйте снова' });
+      throw new BadRequestError('Неверный пароль, попробуйте снова');
     }
 
     const token = jwt.sign(
@@ -79,12 +77,12 @@ const login = async (req, res) => {
     return res.cookie('jwt', token, { maxAge: 3600000 * 24 * 7, httpOnly: true, sameSite: true }).end();
   } catch (error) {
     if (error.name === 'ValidationError') {
-      return res.status(400).send({ message: 'Переданы некорректные данные' });
-    } return res.status(500).json({ message: 'На сервере произошла ошибка' });
+      throw new BadRequestError('Переданы некорректные данные'); // кажется, что это можно удалить
+    } return next(error);
   }
 };
 
-const updateUser = async (req, res) => {
+const updateUser = async (req, res, next) => {
   try {
     const user = await User.findByIdAndUpdate(
       req.user._id,
@@ -92,16 +90,16 @@ const updateUser = async (req, res) => {
       { new: true, runValidators: true },
     );
     if (!user) {
-      return res.status(404).json({ message: 'Пользователь по указанному id не найден' });
+      throw new NotFoundError('Такого пользователя нет');
     } return res.status(200).json({ data: user });
   } catch (error) {
-    if (error.name === 'ValidationError' || error.name === 'CastError') {
-      return res.status(400).send({ message: 'Переданы некорректные данные при обновлении профиля' });
-    } return res.status(500).send({ message: 'На сервере произошла ошибка' });
+    if (error.name === 'ValidationError') {
+      throw new BadRequestError('Переданы некорректные данные'); // кажется, что это можно удалить
+    } return next(error);
   }
 };
 
-const updateAvatar = async (req, res) => {
+const updateAvatar = async (req, res, next) => {
   try {
     const user = await User.findByIdAndUpdate(
       req.user._id,
@@ -109,12 +107,12 @@ const updateAvatar = async (req, res) => {
       { new: true, runValidators: true },
     );
     if (!user) {
-      return res.status(404).json({ message: 'Пользователь по указанному id не найден' });
+      throw new NotFoundError('Такого пользователя нет');
     } return res.status(200).json({ data: user });
   } catch (error) {
-    if (error.name === 'ValidationError' || error.name === 'CastError') {
-      return res.status(400).send({ message: 'Переданы некорректные данные при обновлении профиля' });
-    } return res.status(500).send({ message: 'На сервере произошла ошибка' });
+    if (error.name === 'ValidationError') {
+      throw new BadRequestError('Переданы некорректные данные'); // кажется, что это можно удалить
+    } return next(error);
   }
 };
 

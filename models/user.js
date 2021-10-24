@@ -18,10 +18,6 @@ const userSchema = new Schema({
     type: String,
     required: false,
     default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
-    validate: {
-      validator: (val) => validator.isURL(val, { protocols: ['http', 'https'], require_protocol: true }),
-      message: 'Некорректная ссылка',
-    },
   },
   email: {
     type: String,
@@ -42,13 +38,4 @@ const userSchema = new Schema({
   },
 });
 
-//! опасно так просто вставлять
-
 module.exports = model('User', userSchema);
-
-// еще один вариант валидации
-// validate(value) {
-//   if (!validator.isEmail(value)) {
-//     throw new Error('Invalid email');
-//   }
-// },

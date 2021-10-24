@@ -39,6 +39,20 @@ app.post('/signup',
 app.use('/', auth, usersRouter);
 app.use('/', auth, cardsRouter);
 
+app.use(errors()); // может их можно доработать, т.к. они все 400
+
+app.use((error, req, res, next) => {
+  const { statusCode = 500, message } = error;
+  res
+    .status(statusCode)
+    .send({
+      message: statusCode === 500
+        ? 'На сервере произошла ошибка, попробуйте ещё раз'
+        : message,
+    });
+  next(); // lint попросл проставить
+});
+
 async function start() {
   try {
     await mongoose.connect('mongodb://localhost:27017/mestodb', {
@@ -46,8 +60,8 @@ async function start() {
       useUnifiedTopology: true,
     });
     app.listen(PORT, () => console.log(`App listining on port: >>> ${PORT} <<<`));
-  } catch (e) {
-    console.log('Server ERROR: >>>', e.message);
+  } catch (error) {
+    console.log('Server ERROR: >>>', error.message);
     process.exit(1);
   }
 }

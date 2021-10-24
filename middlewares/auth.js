@@ -1,5 +1,6 @@
 const { NODE_ENV, JWT_SECRET } = process.env;
 const jwt = require('jsonwebtoken');
+const UnauthorizedUserError = require('../errors/UnauthorizedUserError');
 
 module.exports = (req, res, next) => {
   if (req.method === 'OPTIONS') {
@@ -11,6 +12,6 @@ module.exports = (req, res, next) => {
     req.user = payload;
     return next();
   } catch (error) {
-    return res.status(401).json({ message: 'Нет авторизации' });
+    throw new UnauthorizedUserError('Нет авторизации');
   }
 };
