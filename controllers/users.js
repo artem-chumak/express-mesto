@@ -2,6 +2,7 @@ const { NODE_ENV, JWT_SECRET } = process.env;
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const User = require('../models/user');
+const UnauthorizedUserError = require('../errors/UnauthorizedUserError'); // 401
 const BadRequestError = require('../errors/BadRequestError'); // 400
 const NotFoundError = require('../errors/NotFoundError'); // 404
 const AlreadyExistsError = require('../errors/AlreadyExistsError'); // 409
@@ -49,7 +50,15 @@ const creatUser = async (req, res, next) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = new User({ ...req.body, password: hashedPassword });
     await user.save();
-    return res.status(201).json({ user }); // тут пароль отправляется, это норм?
+    return res.status(201).json({
+      name: user.name,
+      about: user.about,
+      avatar: user.avatar,
+      email: user.email,
+      _id: user._id,
+      // ...user._doc, password: ''
+      // можно было еще так, оператор ...rest не получилось применить
+    });
   } catch (error) {
     if (error.name === 'ValidationError') {
       throw new BadRequestError('Переданы некорректные данные'); // кажется, что это можно удалить
@@ -62,11 +71,11 @@ const login = async (req, res, next) => {
     const { email, password } = req.body;
     const user = await User.findOne({ email }).select('+password');
     if (!user) {
-      throw new NotFoundError('Такого пользователя нет');
+      throw new UnauthorizedUserError('Некорректный логин или пароль');
     }
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      throw new BadRequestError('Неверный пароль, попробуйте снова');
+      throw new UnauthorizedUserError('Некорректный логин или пароль');
     }
 
     const token = jwt.sign(
@@ -74,10 +83,10 @@ const login = async (req, res, next) => {
       NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret',
       { expiresIn: '7d' },
     );
-    return res.cookie('jwt', token, { maxAge: 3600000 * 24 * 7, httpOnly: true, sameSite: true }).end();
+    return res.cookie('jwt', token, { maxAge: 3600000 * 24 * 7, httpOnly: true, sameSite: true }).json({ message: 'Авторизация прошла успешно' });
   } catch (error) {
     if (error.name === 'ValidationError') {
-      throw new BadRequestError('Переданы некорректные данные'); // кажется, что это можно удалить
+      throw new UnauthorizedUserError('Некорректный логин или пароль'); // кажется, что это можно удалить
     } return next(error);
   }
 };

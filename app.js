@@ -1,4 +1,6 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const { errors, celebrate, Joi } = require('celebrate');
@@ -6,10 +8,19 @@ const cookieParser = require('cookie-parser');
 const usersRouter = require('./routes/users');
 const cardsRouter = require('./routes/cards');
 const auth = require('./middlewares/auth');
+const errorControll = require('./controllers/errorsControll');
 const { creatUser, login } = require('./controllers/users');
+const NotFoundError = require('./errors/NotFoundError');
 
 const { PORT = 3000 } = process.env;
 const app = express();
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 500,
+});
+
+app.use(helmet());
+app.use(limiter);
 
 app.use(cookieParser());
 app.use(bodyParser.json());
@@ -39,19 +50,13 @@ app.post('/signup',
 app.use('/', auth, usersRouter);
 app.use('/', auth, cardsRouter);
 
-app.use(errors()); // может их можно доработать, т.к. они все 400
-
-app.use((error, req, res, next) => {
-  const { statusCode = 500, message } = error;
-  res
-    .status(statusCode)
-    .send({
-      message: statusCode === 500
-        ? 'На сервере произошла ошибка, попробуйте ещё раз'
-        : message,
-    });
-  next(); // lint попросл проставить
+app.use('*', () => {
+  throw new NotFoundError('Ресурс не найден');
 });
+
+app.use(errors());
+
+app.use(errorControll);
 
 async function start() {
   try {
