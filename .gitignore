@@ -15,5 +15,5 @@ node_modules
 .vscode
 
 # env
-
+.env
 .enva
