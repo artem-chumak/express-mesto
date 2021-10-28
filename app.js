@@ -9,6 +9,7 @@ const usersRouter = require('./routes/users');
 const cardsRouter = require('./routes/cards');
 const auth = require('./middlewares/auth');
 const errorControll = require('./controllers/errorsControll');
+const { requestLogger, errorLogger } = require('./middlewares/logger');
 const { creatUser, login } = require('./controllers/users');
 const NotFoundError = require('./errors/NotFoundError');
 
@@ -25,6 +26,8 @@ app.use(limiter);
 app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
+app.use(requestLogger);
 
 app.post('/signin',
   celebrate({
@@ -53,6 +56,8 @@ app.use('/', auth, cardsRouter);
 app.use('*', () => {
   throw new NotFoundError('Ресурс не найден');
 });
+
+app.use(errorLogger);
 
 app.use(errors());
 
