@@ -17,7 +17,7 @@ const { PORT = 3000 } = process.env;
 const app = express();
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 500,
+  max: 5000,
 });
 
 app.use(helmet());

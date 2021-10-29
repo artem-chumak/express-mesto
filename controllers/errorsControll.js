@@ -9,3 +9,5 @@ module.exports = (error, req, res, next) => {
     });
   next();
 };
+
+// добавить сюда еще один обработчик от Макса.

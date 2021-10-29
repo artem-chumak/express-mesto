@@ -10,7 +10,7 @@ const AlreadyExistsError = require('../errors/AlreadyExistsError'); // 409
 const getUsers = async (req, res, next) => {
   try {
     const users = await User.find({});
-    res.status(200).json({ users });
+    res.status(200).json(users);
   } catch (error) { next(error); }
 };
 
@@ -19,10 +19,10 @@ const getCurrentUser = async (req, res, next) => {
     const user = await User.findById(req.user._id);
     if (!user) {
       throw new NotFoundError('Пользователь по указанному id не найден');
-    } return res.status(200).send({ data: user });
+    } return res.status(200).send(user);
   } catch (error) {
     if (error.name === 'CastError') {
-      throw new BadRequestError('Переданы некорректные данные'); // кажется, что можно удалить
+      next(new BadRequestError('Переданы некорректные данные'));
     } return next(error);
   }
 };
@@ -35,7 +35,7 @@ const getUserById = async (req, res, next) => {
     } return res.status(200).json(user);
   } catch (error) {
     if (error.name === 'CastError') {
-      throw new BadRequestError('Переданы некорректные данные'); // кажется, что можно удалить
+      next(new BadRequestError('Переданы некорректные данные'));
     } return next(error);
   }
 };
@@ -61,7 +61,7 @@ const creatUser = async (req, res, next) => {
     });
   } catch (error) {
     if (error.name === 'ValidationError') {
-      throw new BadRequestError('Переданы некорректные данные'); // кажется, что это можно удалить
+      next(new BadRequestError('Переданы некорректные данные'));
     } return next(error);
   }
 };
@@ -77,7 +77,6 @@ const login = async (req, res, next) => {
     if (!isMatch) {
       throw new UnauthorizedUserError('Некорректный логин или пароль');
     }
-
     const token = jwt.sign(
       { _id: user._id },
       NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret',
@@ -86,7 +85,7 @@ const login = async (req, res, next) => {
     return res.cookie('jwt', token, { maxAge: 3600000 * 24 * 7, httpOnly: true, sameSite: true }).json({ message: 'Авторизация прошла успешно' });
   } catch (error) {
     if (error.name === 'ValidationError') {
-      throw new UnauthorizedUserError('Некорректный логин или пароль'); // кажется, что это можно удалить
+      next(new UnauthorizedUserError('Некорректный логин или пароль'));
     } return next(error);
   }
 };
@@ -100,10 +99,10 @@ const updateUser = async (req, res, next) => {
     );
     if (!user) {
       throw new NotFoundError('Такого пользователя нет');
-    } return res.status(200).json({ data: user });
+    } return res.status(200).json(user);
   } catch (error) {
     if (error.name === 'ValidationError') {
-      throw new BadRequestError('Переданы некорректные данные'); // кажется, что это можно удалить
+      next(new BadRequestError('Переданы некорректные данные'));
     } return next(error);
   }
 };
@@ -117,10 +116,10 @@ const updateAvatar = async (req, res, next) => {
     );
     if (!user) {
       throw new NotFoundError('Такого пользователя нет');
-    } return res.status(200).json({ data: user });
+    } return res.status(200).json(user);
   } catch (error) {
     if (error.name === 'ValidationError') {
-      throw new BadRequestError('Переданы некорректные данные'); // кажется, что это можно удалить
+      next(new BadRequestError('Переданы некорректные данные'));
     } return next(error);
   }
 };
