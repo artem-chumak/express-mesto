@@ -6,7 +6,7 @@ const ForbiddenAccessError = require('../errors/ForbiddenAccessError'); // 403
 const getCards = async (req, res, next) => {
   try {
     const cards = await Card.find({});
-    res.status(200).json({ cards });
+    res.status(200).json(cards);
   } catch (error) { next(error); }
 };
 
